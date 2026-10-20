@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createGame } from '../game/engine.js';
 import TouchPad from './TouchPad.jsx';
+import { preventMobileZoom } from '../game/noZoom.js';
 
 import heroSrc from '../assets/hero.png';
 import heroMeta from '../assets/hero.json';
@@ -43,6 +44,9 @@ export default function Game() {
     setMuted(game.isMuted());
     return () => { game.destroy(); gameRef.current = null; };
   }, []);
+
+  // sin zoom por doble toque ni pellizco
+  useEffect(() => preventMobileZoom(), []);
 
   // muestra los controles táctiles al primer toque
   useEffect(() => {

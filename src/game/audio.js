@@ -68,7 +68,7 @@ export function createAudio() {
   try { A.muted = localStorage.getItem('cp-muted') === '1'; } catch (e) { /* sin almacenamiento */ }
 
   function init() {
-    if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume(); return; }
+    if (A.ctx) { if (A.ctx.state !== 'running') A.ctx.resume().catch(() => {}); return; }
     try {
       A.ctx = new (window.AudioContext || window.webkitAudioContext)();
       A.master = A.ctx.createGain(); A.master.gain.value = A.muted ? 0 : 0.5;
@@ -81,6 +81,30 @@ export function createAudio() {
     } catch (e) { A.ctx = null; }
   }
   const now = () => (A.ctx ? A.ctx.currentTime : 0);
+
+  /* Desbloqueo del audio en celulares.
+     - iOS y Android solo permiten arrancar el audio dentro de un toque que
+       termina (touchend / pointerup / click), no en pointerdown.
+     - iOS además exige reproducir algo en ese mismo toque: un búfer silencioso.
+     - En iPhone, audioSession = 'playback' hace que suene aunque el
+       interruptor de silencio esté activado (iOS 17 en adelante).
+     - Si el sistema suspende el audio (llamada, cambio de app), se reanuda
+       en el siguiente toque o al volver a la pestaña. */
+  function unlock() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* no soportado */ }
+    init();
+    if (!A.ctx) return;
+    if (A.ctx.state !== 'running') A.ctx.resume().catch(() => {});
+    try {
+      const b = A.ctx.createBuffer(1, 1, 22050), src = A.ctx.createBufferSource();
+      src.buffer = b; src.connect(A.ctx.destination); src.start(0);
+    } catch (e) { /* ignorar */ }
+  }
+  const UNLOCK_EVENTS = ['touchend', 'pointerup', 'click', 'keydown'];
+  const onGesture = () => { if (!A.ctx || A.ctx.state !== 'running') unlock(); };
+  const onVisible = () => { if (document.visibilityState === 'visible' && A.ctx && A.ctx.state !== 'running') A.ctx.resume().catch(() => {}); };
+  UNLOCK_EVENTS.forEach(ev => window.addEventListener(ev, onGesture, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', onVisible);
 
   function tone(f, dur, type = 'square', vol = 0.15, slide = 0, t0 = 0, dest, filter = 0, detune = 0) {
     if (!A.ctx) return;
@@ -114,7 +138,7 @@ export function createAudio() {
   };
 
   function tick() {
-    if (!A.ctx || !A.mode || A.muted) { if (A.ctx) A.next = A.ctx.currentTime + 0.05; return; }
+    if (!A.ctx || !A.mode || A.muted || A.ctx.state !== 'running') { if (A.ctx) A.next = A.ctx.currentTime + 0.05; return; }
     const S = SONGS[A.mode], L = parsed[A.mode], sp = 60 / S.bpm / 4;
     while (A.next < A.ctx.currentTime + 0.12) {
       const t = A.next, s = A.step % 16, barN = Math.floor(A.step / 16), bar = barN % 4;
@@ -176,6 +200,10 @@ export function createAudio() {
       A.muted = m; if (A.master) A.master.gain.value = m ? 0 : 0.5;
       try { localStorage.setItem('cp-muted', m ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
     },
-    destroy() { if (A.timer) clearInterval(A.timer); if (A.ctx) A.ctx.close().catch(() => {}); A.ctx = null; },
+    unlock,
+    destroy() {
+      UNLOCK_EVENTS.forEach(ev => window.removeEventListener(ev, onGesture, { capture: true }));
+      document.removeEventListener('visibilitychange', onVisible);
+      if (A.timer) clearInterval(A.timer); if (A.ctx) A.ctx.close().catch(() => {}); A.ctx = null; },
   };
 }

@@ -12,7 +12,8 @@
   --f-hud: "Press Start 2P", "Courier New", monospace;
   color-scheme: dark;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+canvas, .stick, .pbtn { touch-action: none; }
 html, body, #root { height: 100%; }
 body {
   margin: 0; background: var(--night); color: var(--cream); font-family: var(--f-hud);
