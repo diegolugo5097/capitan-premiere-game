@@ -1,0 +1,77 @@
+/* Una sola pantalla de arcade: el lienzo manda, los controles lo rodean. */
+:root {
+  --night: #1a0f08;   /* café tostado */
+  --panel: #2a1a10;   /* madera oscura */
+  --line: #5a3a24;    /* marcos */
+  --red: #b8322a;     /* rojo zócalo */
+  --yellow: #f7d01c;  /* amarillo Premiere */
+  --blue: #2e6fb7;
+  --green: #2f8f4e;
+  --cream: #f2ead8;
+  --muted: #c8b8a0;
+  --f-hud: "Press Start 2P", "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0; background: var(--night); color: var(--cream); font-family: var(--f-hud);
+  overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.shell {
+  height: 100%; display: flex; flex-direction: column; gap: 8px; position: relative;
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bar h1 { margin: 0; font-size: 10px; letter-spacing: 0.08em; color: var(--yellow); font-weight: 400; }
+.bar h1 span { color: var(--muted); }
+.tools { display: flex; gap: 8px; }
+.tools button {
+  font: 9px/1 var(--f-hud); letter-spacing: 0.06em; color: var(--cream); background: var(--panel);
+  border: 2px solid var(--line); padding: 8px 10px; cursor: pointer;
+}
+.tools button:hover { border-color: var(--yellow); }
+.tools button:focus-visible, .pbtn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.box { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.stage { position: relative; max-width: 100%; box-shadow: 0 0 0 3px var(--panel), 0 0 0 5px var(--line), 0 0 40px rgba(247, 208, 28, 0.18); }
+.stage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; background: var(--night); }
+
+/* controles táctiles */
+.pad { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; pointer-events: none; }
+.stick, .pbtn { pointer-events: auto; touch-action: none; }
+.stick { width: 132px; height: 132px; border-radius: 50%; background: rgba(42, 26, 16, 0.6); border: 3px solid rgba(247, 208, 28, 0.5); position: relative; flex: none; }
+.knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: var(--yellow); opacity: 0.8; box-shadow: 0 0 14px var(--yellow); }
+.btns { display: grid; grid-template-columns: repeat(2, 64px); grid-template-rows: repeat(2, 64px); gap: 10px; }
+.pbtn {
+  width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.35);
+  font: 8px/1.2 var(--f-hud); color: var(--night); display: grid; place-items: center; padding: 0; cursor: pointer;
+}
+.pbtn.on { transform: scale(0.92); filter: brightness(1.3); }
+.b-special { background: var(--green); color: var(--cream); }
+.b-kick { background: var(--yellow); }
+.b-punch { background: var(--red); color: var(--cream); }
+.b-jump { background: var(--blue); color: var(--cream); }
+.rotate-hint { display: none; margin: 0; font-size: 8px; color: var(--muted); text-align: center; }
+
+/* horizontal: los controles flotan sobre el juego */
+@media (orientation: landscape) {
+  .touch .pad { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .touch .stick { opacity: 0.8; }
+  .touch .pbtn { opacity: 0.85; }
+  .touch .bar h1 { display: none; }
+}
+/* vertical: los controles van debajo del juego */
+@media (orientation: portrait) {
+  .touch .box { flex: none; }
+  .touch .pad { flex: 1; align-items: center; }
+  .touch .rotate-hint { display: block; }
+}
+@media (max-width: 420px) {
+  .btns { grid-template-columns: repeat(2, 56px); grid-template-rows: repeat(2, 56px); gap: 8px; }
+  .pbtn { width: 56px; height: 56px; }
+  .stick { width: 118px; height: 118px; }
+}
+@media (prefers-reduced-motion: reduce) { .pbtn.on { transform: none; } }
