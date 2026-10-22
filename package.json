@@ -1,8 +1,8 @@
 {
-  "name": "capitan-premiere",
+  "name": "capitan-premier",
   "private": true,
   "version": "1.0.0",
-  "description": "Capitán Premiere vs El Doctor Broca: beat 'em up retro del Café Premiere hecho con React y canvas.",
+  "description": "Capitán Premier: beat 'em up retro del Café Premier hecho con React y canvas.",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -7,6 +7,22 @@
 // Melodías: 16 fichas por compás. Número = semitonos sobre la raíz,
 // "." = silencio, "-" = sostener la nota anterior.
 const SONGS = {
+  // Pantalla de inicio: tema épico en Re menor (i - VII - VI - V).
+  // La batería entra en el compás 5 para que el tema crezca.
+  intro: {
+    bpm: 116, root: 146.83, prog: [0, -2, -4, -5],
+    drums: 'rock', drumsFrom: 4,
+    lead: [
+      '12 - - - 17 - 19 - 20 - 19 - 17 - - -',
+      '19 - - - 17 - 15 - 14 - 15 - 17 - - -',
+      '15 - - - 14 - 12 - 10 - 12 - 14 - - -',
+      '19 - - - 23 - 26 - - - 23 - 19 - - -',
+      '24 - 22 - 24 - 26 - 27 - - - 26 - 24 -',
+      '22 - 19 - 22 - 26 - 24 - - - 22 - 19 -',
+      '20 - 22 - 24 - 27 - 26 - 24 - 22 - 20 -',
+      '19 - - - - - - - 23 - 26 - 31 - - -',
+    ],
+  },
   // Portada: tema heroico en Re mayor
   title: {
     bpm: 128, root: 146.83, prog: [0, 7, 9, 5],
@@ -145,18 +161,20 @@ export function createAudio() {
       const r = S.root * Math.pow(2, S.prog[bar] / 12);
       const D = DRUMS[S.drums];
       // batería con redoble al final de cada 4 compases
-      const fill = bar === 3 && s >= 12;
-      if (D.k.includes(s) || (S.drums === 'blast' && bar === 3 && s % 2 === 1)) kick(t);
-      if (D.s.includes(s) || (fill && s >= 13)) snare(t);
-      if (s % D.h === 0 && !fill) hat(t, s === 14);
+      const drumsOn = barN >= (S.drumsFrom || 0);
+      const fill = bar === 3 && s >= 12 && (drumsOn || barN === (S.drumsFrom || 0) - 1);
+      if (drumsOn && (D.k.includes(s) || (S.drums === 'blast' && bar === 3 && s % 2 === 1))) kick(t);
+      if ((drumsOn && D.s.includes(s)) || (fill && s >= 13)) snare(t);
+      if (drumsOn && s % D.h === 0 && !fill) hat(t, s === 14);
+      if (!drumsOn && s === 0) tone(73.4 * Math.pow(2, S.prog[bar] / 12), sp * 15, 'triangle', 0.3, 0, t, A.music); // pedal grave
       if (s === 0 && barN % 8 === 0) crash(t);
       // bajo: corcheas con octava y nota de paso
-      if (s % 2 === 0) {
+      if (s % 2 === 0 && drumsOn) {
         const pat = [0, 0, 12, 0, 0, 12, 0, s === 14 && bar === 3 ? -1 : 10];
         tone(r / 2 * Math.pow(2, pat[s / 2] / 12), sp * 1.7, 'sawtooth', 0.32, 0, t, A.music, 700);
       }
       // guitarra rítmica: acordes de quinta palm-mute
-      if ([0, 3, 6, 8, 11, 14].includes(s)) {
+      if (drumsOn ? [0, 3, 6, 8, 11, 14].includes(s) : s === 0 || s === 8) {
         for (const n of [0, 7, 12]) tone(r * Math.pow(2, n / 12), sp * 0.9, 'sawtooth', 0.045, 0, t, A.music, 1600, 6);
       }
       // melodía principal (doble oscilador)
@@ -188,6 +206,8 @@ export function createAudio() {
     dig: () => noise(0.35, 0.35, 300, 0, null, 'lowpass'),
     boss: () => { tone(70, 0.9, 'sawtooth', 0.35, -30); noise(0.8, 0.3, 300); },
     crash: () => { noise(0.25, 0.5, 900); tone(160, 0.2, 'triangle', 0.2, -100); },
+    flame: () => { noise(0.5, 0.32, 900, 0, null, 'lowpass'); noise(0.35, 0.14, 2600); },
+    stinger: () => { [0, 7, 12, 15, 19].forEach(n => tone(146.83 * Math.pow(2, n / 12), 1.4, 'sawtooth', 0.08, 0, 0, null, 2400, 7)); noise(1.2, 0.3, 5000, 0, null, 'highpass'); tone(73.4, 0.6, 'sine', 0.8, -30); },
     select: () => { tone(660, 0.06, 'square', 0.12); tone(990, 0.1, 'square', 0.12, 0, now() + 0.06); },
   };
 
@@ -196,6 +216,7 @@ export function createAudio() {
     SFX,
     setMusic(m) { if (A.mode === m) return; A.mode = m; A.step = 0; if (A.ctx) A.next = A.ctx.currentTime + 0.05; },
     isMuted: () => A.muted,
+    isRunning: () => !!A.ctx && A.ctx.state === 'running',
     setMuted(m) {
       A.muted = m; if (A.master) A.master.gain.value = m ? 0 : 0.5;
       try { localStorage.setItem('cp-muted', m ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }

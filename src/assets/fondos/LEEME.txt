@@ -1,0 +1,18 @@
+PANORÁMICAS DE LOS NIVELES
+
+Pon aquí la imagen del fondo de cada nivel con este nombre:
+  calle.png  -> Nivel 2, Calle Real
+  finca.png  -> Nivel 1, Finca La Esperanza
+(También sirven .jpg y .webp.)
+
+Si no hay imagen, el juego usa el fondo dibujado por código.
+
+Medidas recomendadas: 4460 x 540 píxeles (o la misma proporción, por ejemplo 8920 x 1080).
+La imagen se ajusta a todo el largo del nivel: si la proporción es un poco distinta se estira
+levemente, pero si es muy distinta se verá deformada. Basta con 540 px de alto.
+
+- El andén / borde de la calle debe quedar al 63 % de la altura (y = 340 en una imagen de 540).
+  Los personajes caminan de ahí hacia abajo.
+- Calle: si pones calle.png/.jpg, el juego NO pinta el letrero del Premier encima,
+  así que la imagen debe traerlo dibujado en la fachada del final.
+- Deja libre la franja de arriba a la izquierda (vida y especial) y arriba a la derecha (puntos).
