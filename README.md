@@ -5,6 +5,37 @@ Beat 'em up retro del Café Premier hecho con React, Vite y canvas. El Capitán 
 - **Nivel 1 · Finca La Esperanza:** camino de tierra entre cafetales. Esbirros: arrieros del machete y de los cuchillos. Jefe: el Doctor Cuajada, científico loco con lanzallamas.
 - **Nivel 2 · Calle Real:** la calle de Circasia que termina en el Café Premier. Esbirros: el matón del garrote y el encapuchado. Jefe: el Doctor Broca, con su tanque de ácido y guantes de acero.
 
+## Menú de juegos
+
+Al abrir la página aparece el **Arcade del Café Premier**, un menú para elegir entre los juegos:
+
+- **Capitán Premier**, el beat 'em up.
+- **Capitán Premier Fighters**, el juego de pelea 1 vs 1, todavía en construcción.
+
+Se maneja con mando, teclado o toque:
+
+| | Mando | Teclado |
+|---|---|---|
+| Elegir | Palanca o cruceta | Flechas / WASD |
+| Entrar | A, X o START | Enter / Espacio |
+| Volver al menú | B en la portada o en la pausa | Retroceso en la portada o en la pausa |
+
+También puedes volver con el botón **MENÚ** de la barra de arriba. El menú usa la misma configuración de mando que el juego, así que un GameSir que ya configuraste funciona igual.
+
+`/#/beat` abre el beat 'em up directamente, sin pasar por el menú.
+
+**Conectar el juego de pelea (proyecto aparte):** Capitán Premier Fighters vive en su propio proyecto de Vercel. El menú lo abre con su dirección:
+
+1. Despliega el juego de pelea y copia su URL, por ejemplo `https://capitan-premier-fighters.vercel.app`.
+2. En este proyecto, en Vercel, entra a **Settings → Environment Variables** y agrega `VITE_FIGHTERS_URL` con esa URL. También puedes escribirla directamente en `FIGHTERS_URL`, dentro de `src/games.js`.
+3. Vuelve a desplegar. La tarjeta deja de decir "EN CONSTRUCCIÓN" y lleva al juego de pelea.
+
+Para volver al menú desde el juego de pelea, pon en ese proyecto un enlace o un botón (B) que abra la URL de este proyecto. El botón "atrás" del navegador también funciona.
+
+En `games.js` se cambian el nombre, la descripción, el color y la imagen de cada tarjeta (`portada_beat.jpg` y `portada_fighters.jpg` en `src/assets/`).
+
+## Capitán Premier
+
 Si nadie toca nada en la portada durante 8 segundos, empieza la vitrina de personajes. Cualquier tecla, toque o botón la cierra.
 
 ## Correr en local
@@ -74,7 +105,10 @@ El juego usa la Gamepad API del navegador, así que funciona con mandos de Xbox,
 
 ```
 src/
-  App.jsx                 monta el juego
+  App.jsx                 menú o juego según la dirección (#/beat)
+  games.js                lista de juegos del menú
+  components/Launcher.jsx menú de juegos (mando, teclado y toque)
+  components/useMenuInput.js  entrada de mando y teclado para menús
   components/Game.jsx     lienzo, barra superior y ajuste de tamaño
   components/TouchPad.jsx palanca y botones táctiles
   game/content.js         niveles, diálogos de Alfonso y Carlos, oleadas y vitrina de personajes

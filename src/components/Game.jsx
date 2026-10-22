@@ -51,11 +51,13 @@ const ASSETS = {
 
 const prefersTouch = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
-export default function Game() {
+export default function Game({ onExit }) {
   const canvasRef = useRef(null);
   const boxRef = useRef(null);
   const stageRef = useRef(null);
   const gameRef = useRef(null);
+  const exitRef = useRef(onExit);
+  exitRef.current = onExit;
   const [touch, setTouch] = useState(prefersTouch);
   const touchRef = useRef(touch);
   touchRef.current = touch;
@@ -71,6 +73,7 @@ export default function Game() {
       isTouch: () => touchRef.current,
       onMuteChange: setMuted,
       onGamepad: setPadOn,
+      onExit: onExit ? () => exitRef.current && exitRef.current() : null,
       debug,
     });
     gameRef.current = game;
@@ -112,6 +115,7 @@ export default function Game() {
       <header className="bar">
         <h1>CAPITÁN PREMIER <span>vs DR. CUAJADA y DR. BROCA</span></h1>
         <div className="tools">
+          {onExit && <button type="button" onClick={onExit}>MENÚ</button>}
           <button type="button" onClick={() => gameRef.current?.configurePad()}>MANDO</button>
           <button type="button" onClick={() => gameRef.current?.togglePause()}>PAUSA</button>
           <button type="button" aria-pressed={muted} onClick={() => gameRef.current?.setMuted(!muted)}>

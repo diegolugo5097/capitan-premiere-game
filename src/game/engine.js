@@ -31,7 +31,7 @@ export function createGame(canvas, assets, hooks = {}) {
   const KEYMAP = {
     ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
     KeyJ: 'punch', KeyZ: 'punch', KeyK: 'kick', KeyX: 'kick', Space: 'jump', KeyL: 'jump', KeyC: 'jump',
-    KeyI: 'special', KeyV: 'special', Enter: 'start', Escape: 'pause', KeyP: 'pause', KeyM: 'mute', KeyG: 'padcfg', KeyR: 'padreset',
+    KeyI: 'special', KeyV: 'special', Enter: 'start', Escape: 'pause', KeyP: 'pause', KeyM: 'mute', KeyG: 'padcfg', KeyR: 'padreset', Backspace: 'exit',
   };
   function press(a) { if (!IN.held[a]) IN.buf[a] = 9; IN.held[a] = true; audioInit(); G.lastInput = G.t; }
   function release(a) { IN.held[a] = false; }
@@ -965,6 +965,9 @@ export function createGame(canvas, assets, hooks = {}) {
     if (G.go > 0) G.go--;
   }
 
+  // vuelve al menú de juegos (lo maneja React con hooks.onExit)
+  function exitToMenu() { if (hooks.onExit) { SFX.select(); hooks.onExit(); } }
+
   /* ---------------- BUCLE PRINCIPAL ---------------- */
   function update() {
     G.t++;
@@ -982,11 +985,12 @@ export function createGame(canvas, assets, hooks = {}) {
       case 'title':
         G.titleT++;
         if (consume('padcfg')) { openPadConfig(); break; }
+        if (G.titleT > 45 && (consume('special') || consume('exit'))) { exitToMenu(); break; }
         if (G.titleT > 45 && confirmPressed()) { SFX.select(); startLevel(0, false); break; }
         if (G.t - G.lastInput > CAST_IDLE && G.titleT > CAST_IDLE) startCast('title');
         break;
       case 'dialog': updDialog(); if (P && P.st === 'win') P.t++; break;
-      case 'pause': if (consume('padcfg')) { openPadConfig(); break; } if (consume('pause') || consume('start')) G.mode = 'play'; break;
+      case 'pause': if (consume('padcfg')) { openPadConfig(); break; } if (consume('special') || consume('exit')) { exitToMenu(); break; } if (consume('pause') || consume('start')) G.mode = 'play'; break;
       case 'padcfg': if (consume('padreset')) { pad.resetMaps(); pad.cancelConfig(); G.mode = G.cfgReturn; G.notice = { text: 'MANDO RESTABLECIDO A LOS BOTONES NORMALES', t: 180 }; break; } if (consume('special')) { pad.setRumble(!pad.rumbleEnabled()); G.notice = { text: pad.rumbleEnabled() ? 'VIBRACIÓN ACTIVADA' : 'VIBRACIÓN APAGADA', t: 120 }; } if (consume('pause') || consume('padcfg')) { pad.cancelConfig(); G.mode = G.cfgReturn; G.notice = { text: 'CONFIGURACIÓN CANCELADA', t: 120 }; } break;
       case 'gameover': G.t2++; if (G.t2 > 40 && confirmPressed()) { SFX.select(); continueFromCheckpoint(); } break;
       case 'victory': G.t2++; if (G.t2 > 60 && confirmPressed()) {
@@ -1337,6 +1341,7 @@ export function createGame(canvas, assets, hooks = {}) {
       const ctrl = usingPad() ? 'X PUÑO · Y PATADA · A SALTO · B ESPECIAL · START PAUSA'
         : isTouch() ? '' : 'FLECHAS MOVER · J PUÑO · K PATADA · ESPACIO SALTO · I ESPECIAL · P PAUSA';
       if (ctrl) hudText(ctrl, W / 2, 522, 8, '#e8dcc8', 'center');
+      if (hooks.onExit && !isTouch()) hudText(usingPad() ? '< B: MENÚ DE JUEGOS' : '< RETROCESO: MENÚ DE JUEGOS', 20, 28, 8, '#c8b8a0');
       if (!audio.isRunning()) hudText('HAZ CLIC O TOCA LA PANTALLA PARA ACTIVAR LA MÚSICA', W / 2, 458, 8, '#c8b8a0', 'center');
     }
     // destello al entrar
@@ -1463,7 +1468,7 @@ export function createGame(canvas, assets, hooks = {}) {
     else if (base === 'title') drawTitle();
     else {
       drawWorld(); drawHUD();
-      if (base === 'pause' && G.mode !== 'padcfg') drawCenterPanel('PAUSA', [usingPad() ? 'START para seguir' : 'P o ENTER para seguir', 'M: sonido ' + (audio.isMuted() ? 'apagado' : 'encendido')], '#f7d01c');
+      if (base === 'pause' && G.mode !== 'padcfg') drawCenterPanel('PAUSA', [usingPad() ? 'START para seguir' : 'P o ENTER para seguir', usingPad() ? 'B: volver al menú' : 'RETROCESO: volver al menú', 'M: sonido ' + (audio.isMuted() ? 'apagado' : 'encendido')], '#f7d01c');
       if (G.mode === 'gameover') drawCenterPanel('GAME OVER', ['Puntos: ' + G.score, (G.t2 > 40 && (G.t >> 4) % 2) ? confirmLabel() + ' PARA CONTINUAR' : ''], '#e8473c');
       if (G.mode === 'victory') { const last = G.levelIdx >= LEVELS.length - 1; drawCenterPanel(LV().endTitle, ['Puntos: ' + G.score, LV().endLine, (G.t2 > 60 && (G.t >> 4) % 2) ? confirmLabel() + (last ? ' PARA VOLVER AL INICIO' : ' PARA CONTINUAR') : ''], '#f7d01c'); }
       if (G.dialog) drawDialog();
