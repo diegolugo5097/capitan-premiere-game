@@ -6,6 +6,7 @@ Copia esto encima de tu proyecto `capitan-premier` (el del menú "Arcade Premier
 |---|---|
 | `public/aventura/` (carpeta completa) | `public/aventura/` |
 | `src/components/Game.jsx` | reemplaza `src/components/Game.jsx` |
+| `src/fighter/Fighter.jsx` | reemplaza `src/fighter/Fighter.jsx` (la pelea) |
 | `vercel.json` | en la raíz (si ya tienes uno, agrega solo el bloque `headers`) |
 
 Luego `git add . && git commit -m "Aventura: 3 mapas, Quetzalel, NPC" && git push`. Vercel la publica solo.
@@ -18,3 +19,13 @@ Luego `git add . && git commit -m "Aventura: 3 mapas, Quetzalel, NPC" && git pus
 - Los archivos viejos del motor (`src/game/engine.js`, `content.js`, `audio.js`) ya no se usan; puedes dejarlos o borrarlos.
 - Al salir del juego (B o Retroceso en la portada o en la pausa) vuelve a tu menú: `Game.jsx` llama a `onExit()` si se lo pasas, o vuelve a `#/`.
 - Para probar en tu PC: `npm run dev` y abre `/#/beat`.
+
+## Activar Capitán Premier Fighters
+
+La pelea ya viene dentro de `public/aventura/` (el mismo juego trae los dos). Elige **una** de estas dos formas:
+
+**A) Dentro de tu página (recomendado):** copia `src/fighter/Fighter.jsx` y en `src/games.js` cambia la tarjeta de la pelea a `ready: true`. Si tu menú usa `VITE_FIGHTERS_URL`, bórrala en Vercel (Settings → Environment Variables) para que use el componente.
+
+**B) Sin tocar código:** en Vercel → Settings → Environment Variables agrega
+`VITE_FIGHTERS_URL` = `/aventura/index.html?juego=pelea`
+y vuelve a desplegar (Deployments → Redeploy). Al salir de la pelea regresa a la página principal.
